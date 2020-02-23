@@ -1,0 +1,90 @@
+问题：
+
+1、两个单据的对应条件分录Id
+2、
+3、如果取消勾选时采购费用分配表里的货值状态与采购入库单货值状态不相等，是否删除采购费用分配表里的货值和货值状态	
+
+第一步：复选框点击事件：
+
+当选中时：
+1、货值状态字段赋唯一值；
+2、采购入库单的对应分录，采购入库单明细信息表名：T_STK_INSTOCKENTRY   
+货值状态字段： F_JN_Text1    货值字段：F_JN_Decimal    物料编码：MaterialId
+采购入库单的单据编号
+选中时实现方法：
+
+select 入库表分录.货值状态，入库表分录.货值，入库表分录.价税合计 from 入库表 left join 入库表分录 on 入库表.单据编号=入库分录表.单据编号 where 入库表分录.物料编码 = 采购费用分配表物料编码 and 入库表分录.分录Id = 采购费用分配表分录Id and 入库表分录.单据编号 = 入库表.单据编号
+
+String sql=selec * from 入库表 where 物料编码=采购费用分配表物料编码 and 分录Id = 采购费用分配表 分录Id
+Reslutset rs=....
+if（rs.next()）{
+    //判断入库信息表中的状态信息是否与当前状态信息一致
+    if(!rs.getSring(状态信息).equals(当前的状态信息)){  
+        //两个状态信息不一致
+        //判断采购入库表中的货值状态是否为空
+        if(rs.getString(状态信息).equals(null)||rs.getString(状态信息).eauqls(""))
+        {
+            //入库信息表中的信息为空！
+           //第一步：将价税合计赋值给采购费用分配表的货值字段
+            String 货值=rs.getSring(价税合计)；
+           将价税合计赋给采购费用分配的货值（金蝶方法）；
+           *//第二步:将货值、货值状态信息插入采购费用分配表（如果金蝶方法能存入则此步忽略）
+           String sql="update 采购费用分配表 set 货值字段=？，货值状态字段=？where 物料编码=采购费用分配表物料编码 and 分录Id = 采购费用分配表 分录Id";
+           Preperstatement ps=。。。。。
+           ps.setValue（1，货值）;
+           ps.setValue（2，货值状态（赋值的UUId））;
+           ps.executeUpdate（）；
+           ps.close()；
+           //第三步：更新采购入库单表中的货值字段，值为价税合计的值   
+           String sql="update 采购入库表 set 货值字段=？,货值状态=采购费用分配货值状态 where 物料编码字段=采购费用分配表物料编码"；
+           Preperstatement ps=。。。。。
+           ps.setValue（1，rs.getString(价税合计)）;
+           ps.executeUpdate（）；
+           ps.close()；
+        }
+        else{
+           //入库信息表中信息不为空！取出采购入库单的货值
+           //第一步:前端显示货值
+           String 货值=rs.getSring(货值)；
+           将货值赋给采购费用分配单据的货值（金蝶方法）;
+           * //第二步:将货值、货值状态信息插入采购费用分配表（如果金蝶方法能存入则此步忽略）
+            String sql="update 采购费用分配表  set 货值字段=？，货值状态字段=？where 物料编码=采购费用分配表物料编码 and 分录Id = 采购费用分配表 分录Id";
+           Preperstatement ps=。。。。。
+           ps.setValue（1，货值）;
+           ps.setValue（2，货值状态（赋值的UUId））;
+           ps.executeUpdate（）；
+           ps.close()；
+        }
+    }
+}
+
+
+
+第二步：
+
+取消勾选事件：
+
+获得采购费用分配表货值状态字段值
+
+select 入库表分录.货值状态，入库表分录.货值  from 入库表 left join 入库表分录 on 入库表.单据编号=入库分录表.单据编号 where 入库表分录.物料编码 = 采购费用分配表物料编码 and 入库表分录.分录Id = 采购费用分配表分录Id and 入库表分录.单据编号 = 入库表.单据编号 and 入库表分录.货值状态 = 采购费用分配表货值状态"
+
+ResultSet rs=...
+if(rs.next()){
+    //状态一致，清空表中的货值状态和货值
+    //第一步：清空入库表的货值/状态
+    string sql="update 入库表 set 货值=？，货值状态=？ where 物料编码=采购费用分配表物料编码 and 分录id=采购费用分配表分录Id"；
+    Preperstatement ps=....
+    ps.setValue(1,"");
+    ps.setValue(2,"")
+    ps.executeUpdate();
+    ps.close();
+    //第二步：清空采购费用分配表的货值/状态
+    用金蝶方法删除采购费用分配表中的货值和货值状态的值
+}
+else{
+    清空采购费用分配表的货值/状态
+}
+rs.close（）;
+
+注:插入值时的""可以替换为null
+
